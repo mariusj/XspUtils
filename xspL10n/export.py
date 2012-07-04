@@ -51,11 +51,16 @@ def createLangFile(filesByLang, lang, path):
     print("  - " + langName)
     allFile = open(os.path.join(path, langName), "w")
     for f in filesByLang[lang]:
-        allFile.write("#! " + f + "\n")
         inFile = open(os.path.join(path, f), "r")
-        allFile.write(inFile.read())
+        fileContent = inFile.read()
+        if len(fileContent) < 50 and fileContent.startswith("#") and fileContent.endswith("\n") and fileContent.count("\n") == 1:
+            # ignore empty file
+            pass
+        else:
+            allFile.write("#! " + f + "\n")
+            allFile.write(fileContent)
+            allFile.write("\n")
         inFile.close()
-        allFile.write("\n")
     allFile.close()
 
 
