@@ -69,7 +69,7 @@ def exp(path):
     '''
         Joins all files with .properties extension by language.  
     '''
-    print("collecting files")
+    print("collecting files in " + path)
     filesList = getFiles(path, "XPages") + getFiles(path, "CustomControls")
     print("sorting by language")
     filesByLang = getFilesByLang(filesList)
