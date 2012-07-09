@@ -8,7 +8,10 @@ import sys
 import os
 
 
-def getFiles(base, adir):
+auto_trans_dict = None
+
+
+def get_files(base, adir):
     '''
         Returns a list of all files from a directory base/adir with .properties extension.
     '''   
@@ -19,7 +22,7 @@ def getFiles(base, adir):
 
 
 
-def getFilesByLang(filesList):
+def get_files_by_lang(filesList):
     '''
         Returns a dictionary of files categorized by language.
         A key in this dictionary is a language symbol (en, de, pl).
@@ -43,7 +46,7 @@ def getFilesByLang(filesList):
     return filesByLang
     
 
-def createLangFile(filesByLang, lang, path):
+def create_lang_file(filesByLang, lang, path):
     '''
         Creates a file with joined all .properties files for a given language 
     '''
@@ -52,17 +55,47 @@ def createLangFile(filesByLang, lang, path):
     allFile = open(os.path.join(path, langName), "w")
     for f in filesByLang[lang]:
         inFile = open(os.path.join(path, f), "r")
-        fileContent = inFile.read()
-        if len(fileContent) < 50 and fileContent.startswith("#") and fileContent.endswith("\n") and fileContent.count("\n") == 1:
+        content = ""
+        is_content = False
+        for line in inFile:
+            if not line.startswith("#"):
+                content += auto_translate(line)
+                is_content = True
+            content += line
+        if is_content:
             # ignore empty file
-            pass
-        else:
             allFile.write("#! " + f + "\n")
-            allFile.write(fileContent)
+            allFile.write(content)
             allFile.write("\n")
         inFile.close()
     allFile.close()
 
+
+def auto_translate(line):
+    '''
+        Translates the line using default dictionary.
+    '''
+    return line
+
+def init_auto_trans():
+    '''
+        Intialize auto translate dictionary.
+    '''
+    global auto_trans_dict
+    auto_trans_file = open("auto_trans.txt", "r")
+    auto_trans_dict = {}
+    clang = ""
+    for line in auto_trans_file:
+        if line.startswith("\n"):
+            continue
+        print("@"+line+"@")
+        if line.find("=") == -1:
+            clang = line.rstrip("\n\r")
+            auto_trans_dict[clang] = {}
+        else:
+            key, value = line.split("=")
+            auto_trans_dict[clang][key] = value
+    auto_trans_file.close() 
 
 
 def exp(path):
@@ -70,12 +103,14 @@ def exp(path):
         Joins all files with .properties extension by language.  
     '''
     print("collecting files in " + path)
-    filesList = getFiles(path, "XPages") + getFiles(path, "CustomControls")
+    filesList = get_files(path, "XPages") + get_files(path, "CustomControls")
     print("sorting by language")
-    filesByLang = getFilesByLang(filesList)
+    filesByLang = get_files_by_lang(filesList)
+    print("initializing auto translate")
+    init_auto_trans()
     print("writing language files:")
     for l in filesByLang.keys():
-        createLangFile(filesByLang, l, path)
+        create_lang_file(filesByLang, l, path)
     
 
 if __name__ == '__main__':
