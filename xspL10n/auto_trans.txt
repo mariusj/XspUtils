@@ -1,8 +1,10 @@
-all 
+all
+= 
  = 
 PDF=PDF
 [=[
 ]=]
 |=|
+\u00A0=\u00A0
 \u00A0\u00B7\u00A0=\u00A0\u00B7\u00A0
 \u00A0\u00A0\u00A0=\u00A0\u00A0\u00A0

@@ -6,9 +6,12 @@ Created on 25-06-2012
 
 import sys
 import os
+import re
 
 
 auto_trans_dict = None
+
+re_trans = re.compile("([\w\(\)\[\]\-\/\\\d@:\.]+)=\[(\w+)\| (.*) \]")
 
 
 def get_files(base, adir):
@@ -61,9 +64,10 @@ def create_lang_file(filesByLang, lang, path):
             if not line.startswith("#"):
                 content += auto_translate(line)
                 is_content = True
-            content += line
+            else:
+                content += line
         if is_content:
-            # ignore empty file
+            # write only if file contains entries, ignore empty file
             allFile.write("#! " + f + "\n")
             allFile.write(content)
             allFile.write("\n")
@@ -73,9 +77,25 @@ def create_lang_file(filesByLang, lang, path):
 
 def auto_translate(line):
     '''
-        Translates the line using default dictionary.
+        Translates the line using dictionary.
     '''
+    match = re_trans.match(line)
+    if match:
+        key = match.group(1)
+        lang = match.group(2)
+        to_trans = match.group(3)
+        # translate using 'all' dictionary
+        all_dict = auto_trans_dict["all"]
+        if to_trans in all_dict:
+            return key + "=" + all_dict[to_trans]
+        # translate using dictionary for given langauge
+        if lang in auto_trans_dict: 
+            lang_dict = auto_trans_dict[lang]
+            if to_trans in lang_dict:
+                return key + "=" + lang_dict[to_trans] 
+        return line
     return line
+
 
 def init_auto_trans():
     '''
@@ -88,9 +108,11 @@ def init_auto_trans():
     for line in auto_trans_file:
         if line.startswith("\n"):
             continue
-        print("@"+line+"@")
+        # format of dicionary is key=value
+        # where key is string to translate
+        # and value is translated string 
         if line.find("=") == -1:
-            clang = line.rstrip("\n\r")
+            clang = line.rstrip("\n\r ")
             auto_trans_dict[clang] = {}
         else:
             key, value = line.split("=")
