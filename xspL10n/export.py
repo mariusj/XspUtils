@@ -7,6 +7,7 @@ Created on 25-06-2012
 import sys
 import os
 import re
+from optparse import OptionParser
 
 
 auto_trans_dict = None
@@ -49,7 +50,7 @@ def get_files_by_lang(filesList):
     return filesByLang
     
 
-def create_lang_file(filesByLang, lang, path):
+def create_lang_file(filesByLang, lang, path, is_auto_translate):
     '''
         Creates a file with joined all .properties files for a given language 
     '''
@@ -62,8 +63,11 @@ def create_lang_file(filesByLang, lang, path):
         is_content = False
         for line in inFile:
             if not line.startswith("#"):
-                content += auto_translate(line)
                 is_content = True
+                if is_auto_translate:
+                    content += auto_translate(line)
+                else:
+                    content += line
             else:
                 content += line
         if is_content:
@@ -120,7 +124,7 @@ def init_auto_trans():
     auto_trans_file.close() 
 
 
-def exp(path):
+def exp(path, is_auto_translate):
     '''
         Joins all files with .properties extension by language.  
     '''
@@ -128,15 +132,25 @@ def exp(path):
     filesList = get_files(path, "XPages") + get_files(path, "CustomControls")
     print("sorting by language")
     filesByLang = get_files_by_lang(filesList)
-    print("initializing auto translate")
-    init_auto_trans()
+    if is_auto_translate:
+        print("initializing auto translate")
+        init_auto_trans()
     print("writing language files:")
     for l in filesByLang.keys():
-        create_lang_file(filesByLang, l, path)
+        create_lang_file(filesByLang, l, path, is_auto_translate)
     
 
 if __name__ == '__main__':
-    if (len(sys.argv) > 1):
-        exp(sys.argv[1])
+    usage = "usage: %prog [options] [dir]\n\nif dir is not specified a current directory is used"
+    parser = OptionParser(usage)
+    parser.add_option("-a", "--autotranslate",
+                      action="store_true", dest="auto_translate", default=False,
+                      help="automatically translate entries according to auto_trans.txt")
+    (options, args) = parser.parse_args()
+    
+    if (len(args) > 0):
+        db_dir = args[0] 
     else:
-        exp(os.getcwd())
+        db_dir = os.getcwd() 
+
+    exp(db_dir, options.auto_translate)
