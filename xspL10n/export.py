@@ -12,7 +12,7 @@ from optparse import OptionParser
 
 auto_trans_dict = None
 
-re_trans = re.compile("([\w\(\)\[\]\-\/\\\d@:\.]+)=\[(\w+)\| (.*) \]")
+re_trans = re.compile("([\w\(\)\[\]\-\/\\\d@:\.#\{\}]+)=\[(\w+)\| (.*) \]")
 
 
 def get_files(base, adir):
@@ -50,7 +50,7 @@ def get_files_by_lang(filesList):
     return filesByLang
     
 
-def create_lang_file(filesByLang, lang, path, is_auto_translate):
+def create_lang_file(filesByLang, lang, path, is_auto_translate, is_strip):
     '''
         Creates a file with joined all .properties files for a given language 
     '''
@@ -65,7 +65,7 @@ def create_lang_file(filesByLang, lang, path, is_auto_translate):
             if not line.startswith("#"):
                 is_content = True
                 if is_auto_translate:
-                    content += auto_translate(line)
+                    content += auto_translate(line, is_auto_translate, is_strip)
                 else:
                     content += line
             else:
@@ -79,15 +79,23 @@ def create_lang_file(filesByLang, lang, path, is_auto_translate):
     allFile.close()
 
 
-def auto_translate(line):
+def auto_translate(line, is_auto_translate, is_strip):
     '''
         Translates the line using dictionary.
     '''
+    
+    if not is_auto_translate and not is_strip:
+        return line
+    
     match = re_trans.match(line)
-    if match:
-        key = match.group(1)
-        lang = match.group(2)
-        to_trans = match.group(3)
+    if not match:
+        return line
+    
+    key = match.group(1)
+    lang = match.group(2)
+    to_trans = match.group(3)
+    
+    if is_auto_translate:
         # translate using 'all' dictionary
         all_dict = auto_trans_dict["all"]
         if to_trans in all_dict:
@@ -96,10 +104,13 @@ def auto_translate(line):
         if lang in auto_trans_dict: 
             lang_dict = auto_trans_dict[lang]
             if to_trans in lang_dict:
-                return key + "=" + lang_dict[to_trans] 
-        return line
+                return key + "=" + lang_dict[to_trans]
+    
+    if is_strip:
+        return key + "=" + to_trans + "\n"
+    
     return line
-
+    
 
 def init_auto_trans():
     '''
@@ -124,7 +135,7 @@ def init_auto_trans():
     auto_trans_file.close() 
 
 
-def exp(path, is_auto_translate):
+def exp(path, is_auto_translate, is_strip):
     '''
         Joins all files with .properties extension by language.  
     '''
@@ -137,7 +148,7 @@ def exp(path, is_auto_translate):
         init_auto_trans()
     print("writing language files:")
     for l in filesByLang.keys():
-        create_lang_file(filesByLang, l, path, is_auto_translate)
+        create_lang_file(filesByLang, l, path, is_auto_translate, is_strip)
     
 
 if __name__ == '__main__':
@@ -146,6 +157,9 @@ if __name__ == '__main__':
     parser.add_option("-a", "--autotranslate",
                       action="store_true", dest="auto_translate", default=False,
                       help="automatically translate entries according to auto_trans.txt")
+    parser.add_option("-s", "--strip",
+                      action="store_true", dest="strip", default=False,
+                      help="strip langage prefix for untranslated entries eg. '[fr | home]' becomes 'home'")
     (options, args) = parser.parse_args()
     
     if (len(args) > 0):
@@ -153,4 +167,4 @@ if __name__ == '__main__':
     else:
         db_dir = os.getcwd() 
 
-    exp(db_dir, options.auto_translate)
+    exp(db_dir, options.auto_translate, options.strip)
