@@ -78,7 +78,7 @@ def create_lang_file(filesByLang, lang, path, is_auto_translate, is_strip):
 
 def auto_transform(line, is_auto_translate, is_strip):
     '''
-        Translates the line using dictionary.
+        Translates and/or strips a line.
     '''
     
     if not is_auto_translate and not is_strip:
@@ -104,6 +104,7 @@ def auto_transform(line, is_auto_translate, is_strip):
                 return key + "=" + lang_dict[to_trans]
     
     if is_strip:
+        # strip a line of language prefix
         return key + "=" + to_trans + "\n"
     
     return line
