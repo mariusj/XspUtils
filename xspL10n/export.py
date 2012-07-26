@@ -64,10 +64,7 @@ def create_lang_file(filesByLang, lang, path, is_auto_translate, is_strip):
         for line in inFile:
             if not line.startswith("#"):
                 is_content = True
-                if is_auto_translate:
-                    content += auto_translate(line, is_auto_translate, is_strip)
-                else:
-                    content += line
+                content += auto_transform(line, is_auto_translate, is_strip)
             else:
                 content += line
         if is_content:
@@ -79,7 +76,7 @@ def create_lang_file(filesByLang, lang, path, is_auto_translate, is_strip):
     allFile.close()
 
 
-def auto_translate(line, is_auto_translate, is_strip):
+def auto_transform(line, is_auto_translate, is_strip):
     '''
         Translates the line using dictionary.
     '''
@@ -155,7 +152,7 @@ if __name__ == '__main__':
     usage = "usage: %prog [options] [dir]\n\nif dir is not specified a current directory is used"
     parser = OptionParser(usage)
     parser.add_option("-a", "--autotranslate",
-                      action="store_true", dest="auto_translate", default=False,
+                      action="store_true", dest="auto_transform", default=False,
                       help="automatically translate entries according to auto_trans.txt")
     parser.add_option("-s", "--strip",
                       action="store_true", dest="strip", default=False,
