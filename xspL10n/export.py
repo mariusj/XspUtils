@@ -152,7 +152,7 @@ if __name__ == '__main__':
     usage = "usage: %prog [options] [dir]\n\nif dir is not specified a current directory is used"
     parser = OptionParser(usage)
     parser.add_option("-a", "--autotranslate",
-                      action="store_true", dest="auto_transform", default=False,
+                      action="store_true", dest="auto_translate", default=False,
                       help="automatically translate entries according to auto_trans.txt")
     parser.add_option("-s", "--strip",
                       action="store_true", dest="strip", default=False,
