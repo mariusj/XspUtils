@@ -8,6 +8,7 @@ import sys
 import os
 
 
+
 def imp(pathAll, dbdir):
     '''
         Splits a file into several .properties files.  
@@ -24,9 +25,24 @@ def imp(pathAll, dbdir):
         else:
             if output:
                 if line != "\n":
-                    output.write(line)
+                    output.write(decodeUnicode(line))
     allFile.close()
     
+
+def decodeUnicode(line):
+    try:
+        line = unicode(line, "utf-8")
+    except Exception, e:
+        print e
+        print line
+        raise
+    result = ""
+    for c in line:
+        if (ord(c) > 128):
+            c = "\\u%04X" % ord(c)
+        result += c
+    return result
+
 
 
 if __name__ == '__main__':
